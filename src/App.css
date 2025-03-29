@@ -1,42 +1,90 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+.heading{
+  padding-left: 1500 px;
+  margin-left: 450px;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  padding: 20px;
+}
+
+
+
+.banned-container{
+  padding-right: 10px;
+}
+
+/* Scrollable gallery container */
+.gallery-container {
+  width: 120px; /* Adjust as needed */
+  height: 500px; /* Adjust height */
+  overflow-y: auto; /* Enable vertical scrolling */
+  background: #f4f4f4;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure images are aligned properly */
+.image-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: black;
+}
+
+.gallery-item img {
+  width: 100px; /* Keep images small for scrolling */
+  border-radius: 5px;
+  display: block;
+}
+
+
+
+
+.art-container img {
+  max-width: 500px;
+  
+  margin-top: 30px;
+  border-radius: 8px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.art-container{
+  padding-left: 70px;
+}
+
+/* Banned List Container */
+.banned-container {
+  width: 150px; /* Adjust width */
+  height: 500px; /* Fixed height */
+  overflow-y: auto; /* Enable scrolling */
+  background: white;
+  padding: 10px;
+  
+  border-radius: 8px;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Individual banned items */
+.banned-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: black;
+}
+
+.banned-item {
+  background: #d9534f;
+  color: white;
+  padding: 5px;
+  border-radius: 5px;
   text-align: center;
+  font-weight: bold;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+.banned{
+  margin-left: 300px;
 }
