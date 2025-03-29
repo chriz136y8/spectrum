@@ -3,111 +3,152 @@ import "./App.css";
 import Gallery from "./components/Gallery";
 import Banned from "./components/Banned";
 
-const API_URL = "https://api.artic.edu/api/v1/artworks?page=1&limit=100";
+const ACCESS_KEY = "DEMO_KEY";
+const API_URL = `https://api.nasa.gov/planetary/apod?api_key=${ACCESS_KEY}&count=100`;
 
 function App() {
-  const [artworks, setArtworks] = useState([]);
+  const [spaceData, setSpaceData] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [bannedItems, setBannedItems] = useState([]);
-  const [prevArt, setPrevArt] = useState([]);
+  const [prevImages, setPrevImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [fields, setFields] = useState({
-    title: "",
-    artist_title: "",
-
-  });
-
-  // Fetch artworks
+ 
   useEffect(() => {
-    fetch(API_URL)
-      .then((response) => response.json())
-      .then((data) => {
-        setArtworks(data.data);
-      })
-      .catch((error) => console.error("Error fetching data:", error));
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        
+        
+        const filteredData = data.filter(item => 
+          item.url && 
+          item.media_type === "image" && 
+          item.copyright && 
+          item.date
+        );
+        
+        // Randomize  order
+        const shuffledData = [...filteredData].sort(() => Math.random() - 0.5);
+        
+        setSpaceData(shuffledData);
+      } catch (error) {
+        console.error("Error fetching NASA data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  // Get current artwork
-  let currentArtwork = artworks[currentIndex];
 
-  // Check if the artwork is from a banned artist or nationality
-  while (
-    currentArtwork &&
-    (bannedItems.includes(currentArtwork.artist_title) ||
-      bannedItems.includes(currentArtwork.place_of_origin))
-  ) {
-    setCurrentIndex((prev) => prev + 1);
-    currentArtwork = artworks[currentIndex + 1]; // Skip banned artwork
-  }
+  const currentData = spaceData[currentIndex];
 
-  // Handle skipping artwork
-  const handleSkip = () => {
-    setPrevArt((art) => [
-      ...art,
-      `https://www.artic.edu/iiif/2/${currentArtwork.image_id}/full/843,/0/default.jpg`,
-    ]);
-    setCurrentIndex((prev) => prev + 1);
+ 
+  const isBanned = (data) => {
+    if (!data) return false;
+    return (
+      bannedItems.includes(data.copyright) || 
+      bannedItems.includes(data.date?.substring(0, 4)) || // Year
+      bannedItems.includes(data.title)
+    );
   };
 
-  // Handle banning an artist or nationality
+  // Find next 
+  const getNextValidIndex = (startIndex) => {
+    let index = startIndex;
+    while (index < spaceData.length) {
+      if (!isBanned(spaceData[index])) {
+        return index;
+      }
+      index++;
+    }
+   
+    index = 0;
+    while (index < startIndex) {
+      if (!isBanned(spaceData[index])) {
+        return index;
+      }
+      index++;
+    }
+    return -1; // All items banned
+  };
+
+  
+  const handleDiscover = () => {
+    if (currentData) {
+      setPrevImages(prev => [...prev, currentData.url]);
+    }
+    
+    const nextIndex = getNextValidIndex((currentIndex + 1) % spaceData.length);
+    if (nextIndex !== -1) {
+      setCurrentIndex(nextIndex);
+    }
+  };
+
+  
   const handleBan = (value) => {
-    setBannedItems((prev) => [...new Set([...prev, value])]);
-    setCurrentIndex((prev) => prev + 1); // Move to next artwork
+    if (value && !bannedItems.includes(value)) {
+      setBannedItems(prev => [...prev, value]);
+      const nextIndex = getNextValidIndex((currentIndex + 1) % spaceData.length);
+      if (nextIndex !== -1) {
+        setCurrentIndex(nextIndex);
+      }
+    }
   };
 
+  
+  const handleUnban = (value) => {
+    setBannedItems(prev => prev.filter(item => item !== value));
+  };
 
   return (
     <div className="container">
-
-      <h1 className="heading">🎨 Museum Explorer</h1>
-      <h5>Explore Museum Collection.</h5>
+      <h1 className="heading">🚀 Space Explorer</h1>
+      <h5>Discover Amazing Space Images from NASA</h5>
 
       <div className="app-container">
-      
-      <div className="seen">
-      <h3>Artwork seen so far</h3>
-        <Gallery images={prevArt} />
+        <div className="seen">
+          <h3>Images Seen So Far</h3>
+          <Gallery images={prevImages} />
         </div>
 
         <div className="art-container">
-          {currentArtwork ? (
+          {isLoading ? (
+            <p>Loading NASA data...</p>
+          ) : !currentData ? (
+            <p>No more available images! Try removing some bans.</p>
+          ) : (
             <div>
               <img
-                src={`https://www.artic.edu/iiif/2/${currentArtwork.image_id}/full/843,/0/default.jpg`}
-                alt={currentArtwork.title}
+                src={currentData.url}
+                alt={currentData.title}
               />
-              <h2>{currentArtwork.title}</h2>
-              <p>by {currentArtwork.artist_title || "Unknown"}</p>
-              <p>Nationality: {currentArtwork.place_of_origin || "Unknown"}</p>
+              <h2>{currentData.title}</h2>
+              <p className="clickable" onClick={() => handleBan(currentData.copyright)}>
+                Photographer: {currentData.copyright || "Unknown"}
+              </p>
+              <p className="clickable" onClick={() => handleBan(currentData.date?.substring(0, 4))}>
+                Year: {currentData.date?.substring(0, 4) || "Unknown"}
+              </p>
+              <p className="clickable" onClick={() => handleBan(currentData.title)}>
+                Title: {currentData.title}
+              </p>
+              <p className="description">{currentData.explanation?.substring(0, 150)}...</p>
 
-              <button onClick={handleSkip}>Next</button>
-
-              {/* Ban Artist & Nationality */}
-              {currentArtwork.artist_title && (
-                <button onClick={() => handleBan(currentArtwork.artist_title)}>
-                  Ban {currentArtwork.artist_title}
-                </button>
-              )}
-              {currentArtwork.place_of_origin && (
-                <button onClick={() => handleBan(currentArtwork.place_of_origin)}>
-                  Ban {currentArtwork.place_of_origin}
-                </button>
-              )}
+              <button className="discover-btn" onClick={handleDiscover}>
+                Discover New Image
+              </button>
             </div>
-          ) : (
-            <p>Loading...</p>
           )}
         </div>
 
-      
-      <div className="banned">
-      
-      <h3>Ban List</h3>
-          
-        <Banned bannedItems={bannedItems} />
-      </div>
-      
-
+        <div className="banned">
+          <h3>Ban List</h3>
+          <Banned bannedItems={bannedItems} onRemove={handleUnban} />
+        </div>
       </div>
     </div>
   );
